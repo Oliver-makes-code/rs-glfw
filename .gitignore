@@ -1,3 +1,5 @@
 target/
+.vscode/
+bindings/
 *.exe
 *.pdb
