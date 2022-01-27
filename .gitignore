@@ -3,3 +3,4 @@ target/
 bindings/
 *.exe
 *.pdb
+bindings.json
