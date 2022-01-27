@@ -4,9 +4,12 @@ extern crate libc;
 
 use deno_bindgen::deno_bindgen;
 
+use glfw::Action;
+
 static mut GLFW: Option<glfw::Glfw> = None;
 static mut WINDOW: Option<glfw::Window> = None;
 static mut EVENTS: Option<std::sync::mpsc::Receiver<(f64, glfw::WindowEvent)>> = None;
+static mut KEYS: [bool; 348] = [false; 348];
 
 unsafe fn get_glfw() -> &'static mut  glfw::Glfw {
     match GLFW {
@@ -50,6 +53,20 @@ pub fn createWindow(width:u32, height:u32, name: &str) {
     }
 }
 
+fn key_pressed(scancode: i32) -> bool {
+    unsafe {
+        return KEYS[(scancode as usize)];
+    }
+}
+
+#[deno_bindgen]
+pub fn keyPressed(scancode: i32) -> i16 {
+    if key_pressed(scancode) {
+        return 1;
+    }
+    return 0;
+}
+
 #[deno_bindgen]
 pub fn pollEvents() {
     unsafe {
@@ -58,7 +75,17 @@ pub fn pollEvents() {
         let window = get_window();
         for (_, event) in glfw::flush_messages(&get_events()) {
             match event {
-                glfw::WindowEvent::Key(glfw::Key::Escape, _, glfw::Action::Press, _) => window.set_should_close(true),
+                glfw::WindowEvent::Key(key, scancode, action, mods) => {
+                    match action {
+                        glfw::Action::Press => {
+                            KEYS[(scancode as usize)] = true;
+                        }
+                        glfw::Action::Release => {
+                            KEYS[(scancode as usize)] = false;
+                        }
+                        _ => {}
+                    }
+                }
                 _ => {}
             }
         }
